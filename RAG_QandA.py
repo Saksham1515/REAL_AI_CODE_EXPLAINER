@@ -105,7 +105,7 @@ def only_document_retriever(_chatprompt,_db,Ranking_k_user=5):
 def llm_model_code(only_code_prompt):
     llm = GoogleGenerativeAI(
     model="gemini-pro",
-    api_key="AIzaSyAiqfdFIRk2eAufqW18mATg0kEk0Qyka3o"
+    api_key=GOOGLE_API_KEYs
     )
     st.session_state.output_rag_key = llm.invoke(only_code_prompt)
     st.session_state.kk = only_code_prompt
