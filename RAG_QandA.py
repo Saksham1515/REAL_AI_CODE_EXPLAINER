@@ -3,14 +3,15 @@ import streamlit as st
 from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.prompts import  PromptTemplate, ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import GoogleGenerativeAI
-from langchain.chains import create_retrieval_chain
+from langchain.chains.retrieval import create_retrieval_chain
 import time
 
 HF_API_KEYs = st.secrets.HF_API_KEY
 GOOGLE_API_KEYs= st.secrets.GOOGLE_API_KEY
+model_name = "gemini-1.5-flash-latest" #"gemini-1.5-pro-001"
 if "kk" not in st.session_state:
     st.session_state.kk = ""
 if "output_rag_ke" not in st.session_state:
@@ -93,18 +94,18 @@ Question : {user_prompt}
 @st.cache_resource(show_spinner=False)
 def only_document_retriever(_chatprompt,_db,Ranking_k_user=5):
     llm = GoogleGenerativeAI(
-    model = "gemini-pro",
+    model = model_name,
     api_key = GOOGLE_API_KEYs
     )
     document_chain = create_stuff_documents_chain(llm,_chatprompt)
     retriever=_db.as_retriever(search_kwargs={'k': Ranking_k_user})
     retrieval_chain = create_retrieval_chain(retriever,document_chain)
-    return retrieval_chain
+    return retrieval_chain,retriever
 
 @st.cache_resource(show_spinner=False)
 def llm_model_code(only_code_prompt):
     llm = GoogleGenerativeAI(
-    model="gemini-pro",
+    model=model_name,
     api_key=GOOGLE_API_KEYs
     )
     st.session_state.output_rag_key = llm.invoke(only_code_prompt)
@@ -119,7 +120,7 @@ title_conatiner= st.container()
 title_conatiner.title("👨‍💻 RAG Q&A")
 title_conatiner.caption("Decode with Confidence: RAG Q&A at Your Fingertips")
 buttons = st.container(border=True)
-user_prompt = st.chat_input("What is up?")
+user_prompt = st.chat_input("Write your Query")
 col1,col2,col3 = buttons.columns(3,gap='large')
 if  col1.toggle("Only Code",key ="Only_Code"):
     code_snippets = buttons.text_area("Enter Your Code Here",height=120,help="Only applicable for Python",placeholder=f"a = 5\nb = 5\nc = a + b\nprint(c)")
@@ -140,11 +141,13 @@ if col2.toggle("Only Documents",key ="Only_Documents"):
         chatprompt = only_document_prompt()
         if st.session_state.tuning:
             db= Text_split_embedding_and_vectorstore(pdf_extract(file),chunk_size_user=st.session_state.Chunk_Size,chunk_overlap_user=st.session_state.Chunk_Overlap)
-            retriver_chain = only_document_retriever(chatprompt,db,Ranking_k_user=st.session_state.Ranking_k)
+            retriver_chain,retr_cha = only_document_retriever(chatprompt,db,Ranking_k_user=st.session_state.Ranking_k)
+            st.write(retr_cha)
         else:
             db= Text_split_embedding_and_vectorstore(pdf_extract(file))
             retriver_chain = only_document_retriever(chatprompt,db)
-        only_document_answer(retriver_chain,user_prompt)
+            retriver_chain,retr_cha = only_document_answer(retriver_chain,user_prompt)
+            st.write(retr_cha)
         # st.write(st.session_state.kk)
 
 if col3.toggle("Tuning",key="tuning"):

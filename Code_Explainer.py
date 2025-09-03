@@ -1,10 +1,13 @@
 import streamlit as st
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_google_genai.llms import GoogleGenerativeAI
 import time
 import graphviz
 import os
 
-GOOGLE_API_KEYs= st.secrets.GOOGLE_API_KEY
+
+GOOGLE_API_KEYs = st.secrets.GOOGLE_API_KEY
+model_name = "gemini-1.5-flash-latest"  #"gemini-pro"
+
 if "output_explain_key" not in st.session_state:
     st.session_state.output_explain_key = ""
 
@@ -16,10 +19,12 @@ def stream_data_explain():
 @st.cache_resource(show_spinner=False)
 def llm_model(prompt):
     llm = GoogleGenerativeAI(
-    model="gemini-pro",
+    model= model_name,       
     api_key=GOOGLE_API_KEYs
     )
-    st.session_state.output_explain_key = llm.invoke(prompt)
+    # st.session_state.output_explain_key = llm.invoke(prompt)
+    generated_answer = llm.invoke(prompt)
+    return generated_answer
 
 @st.cache_data(show_spinner=False)
 def explain_code_prompt(code_snippets):
@@ -597,6 +602,7 @@ How It Works:
     {code_explanation}
     ####
     Code Snippet is shared below, delimited with triple backticks:
+    and Code Snippet is shared below is not Code or is a general question then answer the query that like that "Sorry, I Cannot Answer this question because i am only a AI-code-explainer Bot. Please Provide Code Snippit so i can help you" , delimited with triple backticks:
     ```
     {code_snippets}
     ```
@@ -1739,7 +1745,7 @@ def flowchart_code_prompt(code_snippets):
     sorted_arr = bubble_sort(arr)
     print(sorted_arr)
 
-    dot code: 
+    dot code: !! don't add triple hash and  triple backticks in dote code 
     digraph G {
         node [shape=box];
         
@@ -1788,7 +1794,7 @@ def flowchart_code_prompt(code_snippets):
     prime_numbers = find_prime_numbers(n)
     print(prime_numbers)
 
-    dot code:
+    dot code: !! don't add triple hash and  triple backticks in dote code
     digraph G {
         node [shape=box];
 
@@ -1856,36 +1862,37 @@ selection = input_cont.segmented_control(" ", options, selection_mode="single")
 
 if selection == "Explain Code":
     prompt_for_explain =explain_code_prompt(code_snippets=code_snippets)
-    llm_model(prompt=prompt_for_explain)
-    output_cont.write(stream_data_explain)
+    ans = llm_model(prompt=prompt_for_explain)
+    output_cont.write(ans)   #(stream_data_explain)
 
-if selection == "Flowchart":
-    prompt_for_flowchart =flowchart_code_prompt(code_snippets=code_snippets)
-    llm_model(prompt=prompt_for_flowchart)
+if selection == "Flowchart":    
+    prompt_for_flowchart = flowchart_code_prompt(code_snippets=code_snippets)
+    ans = llm_model(prompt=prompt_for_flowchart)
     cwd = os.getcwd()
     dot_file_path:str = os.path.join(cwd,"mygraph.dot")
     with open(dot_file_path, "w") as f:
-        f.write(st.session_state.output_explain_key)
+        f.write(ans) #(st.session_state.output_explain_key)
 
     with open(dot_file_path, 'r') as fr:
         lines = fr.readlines()
         with open(dot_file_path, 'w') as fw:
             for line in lines:
-                if line.strip('\n') != "```":
+                if line.strip('\n') != "```" and line.strip('\n') != "###" :
                     fw.write(line)
     dot_graph = graphviz.Source.from_file(dot_file_path)
     st.write(dot_graph)
     os.remove(dot_file_path)
 
+
 if selection == "Meta Data":
     prompt_for_metadata = metadata_code_prompt(code_snippets=code_snippets)
-    llm_model(prompt=prompt_for_metadata)
-    output_cont.write(stream_data_explain)
+    ans = llm_model(prompt=prompt_for_metadata)
+    output_cont.write(ans)#(stream_data_explain)
 
 if selection == "Tips to improve":
     prompt_for_improve = improve_code_prompt(code_snippets=code_snippets)
-    llm_model(prompt=prompt_for_improve)
-    output_cont.write(stream_data_explain)
+    ans = llm_model(prompt=prompt_for_improve)
+    output_cont.write(ans)#(stream_data_explain)
 
 if selection == "Show Code":
     st.code(code_snippets)
