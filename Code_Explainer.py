@@ -16,7 +16,7 @@ def stream_data_explain():
 @st.cache_resource(show_spinner=False)
 def llm_model(prompt):
     llm = GoogleGenerativeAI(
-    model="gemini-pro",
+    model= "gemini-2.0-flash-lite" #"gemini-pro",
     api_key=GOOGLE_API_KEYs
     )
     st.session_state.output_explain_key = llm.invoke(prompt)
