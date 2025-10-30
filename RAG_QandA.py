@@ -11,7 +11,7 @@ import time
 
 HF_API_KEYs = st.secrets.HF_API_KEY
 GOOGLE_API_KEYs= st.secrets.GOOGLE_API_KEY
-model_name = "gemini-1.5-flash-latest" #"gemini-1.5-pro-001"
+model_name = "gemini-2.5-flash" #"gemini-1.5-flash-latest" #"gemini-1.5-pro-001"
 if "kk" not in st.session_state:
     st.session_state.kk = ""
 if "output_rag_ke" not in st.session_state:

@@ -6,7 +6,7 @@ import os
 
 
 GOOGLE_API_KEYs = st.secrets.GOOGLE_API_KEY
-model_name = "gemini-1.5-flash-latest"  #"gemini-pro"
+model_name = "gemini-2.5-flash" #"gemini-1.5-flash-latest"  #"gemini-pro"
 
 if "output_explain_key" not in st.session_state:
     st.session_state.output_explain_key = ""
